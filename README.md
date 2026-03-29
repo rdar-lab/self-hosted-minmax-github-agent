@@ -87,7 +87,7 @@ If your project requires Claude to run tests or build commands, you will need to
 
 ## Timeout
 
-Each workflow run has a **60-minute hard timeout**. For large or complex tasks Claude may not finish in a single run. The `CLAUDE.md` instructs Claude to commit and push whatever it has completed before the timeout is reached, so work is never fully lost.
+Each workflow run has a **120-minute hard timeout** and a **200-turn limit**. For very large or complex tasks Claude may still not finish in a single run. The `CLAUDE.md` instructs Claude to commit and push whatever it has completed before hitting the limit, and the workflow has a safety-net step that commits and pushes any remaining uncommitted changes after every run regardless of how it ended.
 
 ## What CLAUDE.md does
 

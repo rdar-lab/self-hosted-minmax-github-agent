@@ -1,6 +1,11 @@
-## Git Workflow
-- When running in GitHub Actions (CI=true): after EVERY single file you create or modify, immediately run git add and git commit. Do not wait. Do not batch. Commit after each individual file change. Push every 3 commits.
-- If you are about to run out of turns, stop implementing and commit+push everything you have so far, even if incomplete.
+## Git Workflow — MANDATORY IN CI
+When running in GitHub Actions (CI=true) you MUST follow these rules without exception:
+- After EVERY file you create or modify: immediately run `git add <file> && git commit -m "<message>"`. No exceptions.
+- ONE file = ONE commit. Never batch multiple files into a single commit.
+- After every 3 commits: run `git push`.
+- If you are about to run out of turns: stop implementing, commit and push everything completed so far (even if incomplete), then stop.
+
+IMPORTANT: Skipping a commit after a file change is a critical failure. The safety net at the end of the workflow will catch leftovers, but do not rely on it — always commit immediately after each file.
 - When running locally: do not commit or push anything unless explicitly asked.
 
 ## GitHub Issues Workflow
