@@ -9,11 +9,11 @@ IMPORTANT: Skipping a commit after a file change is a critical failure. The safe
 - When running locally: do not commit or push anything unless explicitly asked.
 
 ## GitHub Issues Workflow
-- When triggered on an issue in GitHub Actions (CI=true): analyze the issue, create a branch, push IMPLEMENTATION_PLAN.md, then use mcp__github__create_pull_request to open a draft PR with the implementation plan in the description and @claude in the PR body. Do not implement anything yet.
+- When triggered on an issue in GitHub Actions (CI=true): analyze the issue, create a branch, push IMPLEMENTATION_PLAN.md, then use mcp__github__create_pull_request to open a draft PR with the implementation plan in the description and @minmax in the PR body. Do not implement anything yet.
 
 ## GitHub PR Workflow
-- When triggered on a PR opened event where @claude appears in the PR body: implement the plan, committing frequently.
-- When triggered on a PR comment containing @claude: follow the instructions in that comment only.
+- When triggered on a PR opened event where @minmax appears in the PR body: implement the plan, committing frequently.
+- When triggered on a PR comment containing @minmax: follow the instructions in that comment only.
 
 ## Agent Memory
 @AGENTS.md
