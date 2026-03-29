@@ -103,20 +103,23 @@ jobs:
           if event == "issue_comment":
               if is_pr:
                 prompt = GITHUB_RULE + (
+                    f"** This is a Github PR **\n\n"
                     f"Repository: {repo}\n"
                     f"PR #{e('T_NUMBER')}: {e('T_TITLE')}\n"
                     f"PR description:\n{e('T_BODY')}\n\n"
                     f"Instructions:\n"
                     f"1. Read CLAUDE.md and AGENTS.md.\n"
                     f"2. Read IMPLEMENTATION_PLAN.md.\n"
-                    f"3. CRITICAL git discipline: after every single file you create or modify, immediately run `git add <file> && git commit -m '<message>'`. ONE file = ONE commit. Never batch multiple files.\n"
-                    f"4. After every 3 commits, run `git push`.\n"
-                    f"5. If you are about to run out of turns, stop implementing, commit and push everything completed so far, then stop.\n"
-                    f"6. After pushing all commits, post a comment on PR #{e('T_NUMBER')} in repo {repo} using mcp__github__create_issue_comment summarizing what was implemented, which files were changed, and the branch name.\n"
+                    f"3. IMPORTANT: Do not open another PR or branch, this branch is for you to make the updates in.\n"
+                    f"4. CRITICAL git discipline: after every single file you create or modify, immediately run `git add <file> && git commit -m '<message>'`. ONE file = ONE commit. Never batch multiple files.\n"
+                    f"5. After every 3 commits, run `git push`.\n"
+                    f"6. If you are about to run out of turns, stop implementing, commit and push everything completed so far, then stop.\n"
+                    f"7. After pushing all commits, post a comment on PR #{e('T_NUMBER')} in repo {repo} using mcp__github__create_issue_comment summarizing what was implemented, which files were changed, and the branch name.\n"
                     f"User Instructions:\n{e('C_BODY')}\n\n"
                 )                
               else:
                 prompt = GITHUB_RULE + (
+                    f"** This is a Github Issue **\n\n"
                     f"Repository: {repo}\n"
                     f"Issue #{e('T_NUMBER')}: {e('T_TITLE')}\n"
                     f"Issue body:\n{e('T_BODY')}\n\n"
@@ -132,6 +135,7 @@ jobs:
                 )
           elif event == "pull_request_review_comment":
               prompt = GITHUB_RULE + (
+                  f"** This is a Github PR **\n\n"
                   f"Repository: {repo}\n"
                   f"PR #{e('T_NUMBER')}: {e('T_TITLE')}\n"
                   f"PR description:\n{e('T_BODY')}\n\n"
@@ -139,11 +143,13 @@ jobs:
                   f"1. Read CLAUDE.md and AGENTS.md.\n"
                   f"2. Read IMPLEMENTATION_PLAN.md.\n"
                   f"3. Review comment on {e('C_PATH')}:\n{e('C_BODY')}\n\n"
-                  f"4. After completing the task, post a comment on PR #{e('T_NUMBER')} in repo {repo} \n"
-                  f"5. using mcp__github__create_issue_comment summarizing what was done and which files were changed."
+                  f"4. IMPORTANT: Do not open another PR or branch, this branch is for you to make the updates in.\n"
+                  f"5. After completing the task, post a comment on PR #{e('T_NUMBER')} in repo {repo} \n"
+                  f"6. using mcp__github__create_issue_comment summarizing what was done and which files were changed."
               )
           elif event == "pull_request_review":
               prompt = GITHUB_RULE + (
+                  f"** This is a Github PR **\n\n"
                   f"Repository: {repo}\n"
                   f"PR #{e('T_NUMBER')}: {e('T_TITLE')}\n"
                   f"PR description:\n{e('T_BODY')}\n\n"
@@ -151,12 +157,14 @@ jobs:
                   f"Instructions:\n"
                   f"1. Read CLAUDE.md and AGENTS.md.\n"
                   f"2. Read IMPLEMENTATION_PLAN.md.\n"
-                  f"3. Address PR review.\n"
-                  f"4. After completing the task, post a comment on PR #{e('T_NUMBER')} in repo {repo} "
-                  f"5. using mcp__github__create_issue_comment summarizing what was done and which files were changed."
+                  f"3. IMPORTANT: Do not open another PR or branch, this branch is for you to make the updates in.\n"
+                  f"4. Address PR review.\n"
+                  f"5. After completing the task, post a comment on PR #{e('T_NUMBER')} in repo {repo} "
+                  f"6. using mcp__github__create_issue_comment summarizing what was done and which files were changed."
               )
           elif event == "pull_request":
               prompt = GITHUB_RULE + (
+                  f"** This is a Github PR **\n\n"
                   f"Repository: {repo}\n"
                   f"PR #{e('T_NUMBER')}: {e('T_TITLE')}\n"
                   f"PR description:\n{e('T_BODY')}\n\n"
@@ -164,10 +172,11 @@ jobs:
                   f"1. Read CLAUDE.md and AGENTS.md.\n"
                   f"2. Read IMPLEMENTATION_PLAN.md.\n"
                   f"3. Implement the plan based on the IMPLEMENTATION_PLAN.md file.\n"
-                  f"4. CRITICAL git discipline: after every single file you create or modify, immediately run `git add <file> && git commit -m '<message>'`. ONE file = ONE commit. Never batch multiple files.\n"
-                  f"5. After every 3 commits, run `git push`.\n"
-                  f"6. If you are about to run out of turns, stop implementing, commit and push everything completed so far, then stop.\n"
-                  f"7. After pushing all commits, post a comment on PR #{e('T_NUMBER')} in repo {repo} using mcp__github__create_issue_comment summarizing what was implemented, which files were changed, and the branch name."
+                  f"4. IMPORTANT: Do not open another PR or branch, this branch is for you to make the updates in.\n"
+                  f"5. CRITICAL git discipline: after every single file you create or modify, immediately run `git add <file> && git commit -m '<message>'`. ONE file = ONE commit. Never batch multiple files.\n"
+                  f"6. After every 3 commits, run `git push`.\n"
+                  f"7. If you are about to run out of turns, stop implementing, commit and push everything completed so far, then stop.\n"
+                  f"8. After pushing all commits, post a comment on PR #{e('T_NUMBER')} in repo {repo} using mcp__github__create_issue_comment summarizing what was implemented, which files were changed, and the branch name."
               )
           else:
               prompt = ""
