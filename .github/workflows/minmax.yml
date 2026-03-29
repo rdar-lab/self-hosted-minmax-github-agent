@@ -40,6 +40,9 @@ jobs:
           mkdir -p ~/.claude
         continue-on-error: true
 
+      - name: Ensure log directory exists
+        run: mkdir -p ~/.claude/logs && touch ~/.claude/logs/.keep
+
       - name: Configure Claude Code for MiniMax
         env:
           MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
@@ -217,5 +220,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: claude-logs-${{ github.run_id }}
-          path: ~/.claude/logs/
+          # Use the absolute path or $HOME instead of ~
+          path: /home/runner/.claude/logs/
+          # OR if you are on a custom local user:
+          # path: /root/.claude/logs/
           retention-days: 7
