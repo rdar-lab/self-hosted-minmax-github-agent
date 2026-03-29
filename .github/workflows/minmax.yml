@@ -102,14 +102,18 @@ jobs:
                   f"Repository: {repo}\n"
                   f"PR #{e('PR_NUMBER')}: {e('PR_TITLE')}\n"
                   f"PR description:\n{e('PR_BODY')}\n\n"
-                  f"Review comment on {e('COMMENT_PATH')}:\n{e('COMMENT_BODY')}"
+                  f"Review comment on {e('COMMENT_PATH')}:\n{e('COMMENT_BODY')}\n\n"
+                  f"After completing the task, post a comment on PR #{e('PR_NUMBER')} in repo {repo} "
+                  f"using mcp__github__create_issue_comment summarizing what was done and which files were changed."
               )
           elif event == "pull_request_review":
               prompt = (
                   f"Repository: {repo}\n"
                   f"PR #{e('PR_NUMBER')}: {e('PR_TITLE')}\n"
                   f"PR description:\n{e('PR_BODY')}\n\n"
-                  f"PR review:\n{e('REVIEW_BODY')}"
+                  f"PR review:\n{e('REVIEW_BODY')}\n\n"
+                  f"After completing the task, post a comment on PR #{e('PR_NUMBER')} in repo {repo} "
+                  f"using mcp__github__create_issue_comment summarizing what was done and which files were changed."
               )
           elif event == "pull_request":
               prompt = (
@@ -119,7 +123,10 @@ jobs:
                   "immediately run git add and git commit for that file before touching anything else.\n\n"
                   f"Repository: {repo}\n"
                   f"PR #{e('PR_NUMBER')}: {e('PR_TITLE')}\n"
-                  f"PR description:\n{e('PR_BODY')}"
+                  f"PR description:\n{e('PR_BODY')}\n\n"
+                  f"After pushing all commits, post a comment on PR #{e('PR_NUMBER')} in repo {repo} "
+                  f"using mcp__github__create_issue_comment summarizing what was implemented, "
+                  f"which files were changed, and the branch name."
               )
           else:
               prompt = ""
@@ -129,6 +136,21 @@ jobs:
           print(f"Prompt written ({len(prompt)} chars)")
           PYEOF
 
+      - name: Post starting comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          if [ "$EVENT_NAME" = "issue_comment" ]; then
+            NUMBER="$ISSUE_NUMBER"
+          else
+            NUMBER="$PR_NUMBER"
+          fi
+          gh issue comment "$NUMBER" --repo "$REPO" --body "MiniMax is starting to work on this..."
+
       - name: Run MiniMax agent
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -137,7 +159,7 @@ jobs:
           claude \
             --model MiniMax-M2.7 \
             --max-turns 200 \
-            --allowedTools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(git:*),Bash(find:*),mcp__github__create_pull_request,mcp__github__list_pull_requests,mcp__github__get_pull_request,mcp__github__update_pull_request" \
+            --allowedTools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(git:*),Bash(find:*),mcp__github__create_pull_request,mcp__github__list_pull_requests,mcp__github__get_pull_request,mcp__github__update_pull_request,mcp__github__create_issue_comment" \
             -p "$PROMPT"
 
       - name: Safety net — commit and push any uncommitted changes
