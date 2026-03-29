@@ -34,7 +34,10 @@ jobs:
           git config user.name "MiniMax Agent"
 
       - name: Clear Claude state
-        run: rm -rf ~/.claude/plugins ~/.claude/settings.json
+        run: |
+          # Wipe the config, logs, and plugins to prevent "context leakage"
+          rm -rf ~/.claude/*
+          mkdir -p ~/.claude
         continue-on-error: true
 
       - name: Configure Claude Code for MiniMax
@@ -73,73 +76,98 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           REPO: ${{ github.repository }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          ISSUE_BODY: ${{ github.event.issue.body }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_BODY: ${{ github.event.pull_request.body }}
-          REVIEW_BODY: ${{ github.event.review.body }}
-          COMMENT_PATH: ${{ github.event.comment.path }}
+          T_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+          T_TITLE: ${{ github.event.pull_request.title || github.event.issue.title }}
+          T_BODY: ${{ github.event.pull_request.body || github.event.issue.body }}
+          C_BODY: ${{ github.event.comment.body || github.event.review.body }}
+          C_PATH: ${{ github.event.comment.path }}
+          # Improved PR detection logic
+          IS_PR: ${{ github.event.issue.pull_request != null || github.event.pull_request != null }}
         run: |
           python3 - << 'PYEOF'
           import os
 
-          event = os.environ.get("EVENT_NAME", "")
-          repo  = os.environ.get("REPO", "")
-
           def e(key):
               return os.environ.get(key, "")
 
+          event = e("EVENT_NAME")
+          repo  = e("REPO")
+          is_pr = e("IS_PR").lower() == "true"
+          t_id  = e("T_NUMBER")
+  
           GITHUB_RULE = (
               "IMPORTANT: For ALL GitHub operations (posting comments, creating PRs, etc.) "
               "you MUST use the mcp__github__* tools. Never use gh CLI or curl for GitHub API calls.\n\n"
           )
 
           if event == "issue_comment":
-              prompt = GITHUB_RULE + (
-                  f"Repository: {repo}\n"
-                  f"Issue #{e('ISSUE_NUMBER')}: {e('ISSUE_TITLE')}\n"
-                  f"Issue body:\n{e('ISSUE_BODY')}\n\n"
-                  f"User comment:\n{e('COMMENT_BODY')}\n\n"
-                  f"Instructions:\n"
-                  f"1. Analyze the issue and create a branch for the fix.\n"
-                  f"2. Write an IMPLEMENTATION_PLAN.md describing your approach.\n"
-                  f"3. Commit and push IMPLEMENTATION_PLAN.md to the branch.\n"
-                  f"4. Open a draft PR using mcp__github__create_pull_request with the plan in the description and '@minmax' in the PR body.\n"
-                  f"5. Do NOT implement anything yet — plan only.\n"
-                  f"6. Post a comment on issue #{e('ISSUE_NUMBER')} in repo {repo} using mcp__github__create_issue_comment with a summary and a link to the PR."
-              )
+              if is_pr:
+                prompt = GITHUB_RULE + (
+                    f"Repository: {repo}\n"
+                    f"PR #{e('T_NUMBER')}: {e('T_TITLE')}\n"
+                    f"PR description:\n{e('T_BODY')}\n\n"
+                    f"Instructions:\n"
+                    f"1. Read CLAUDE.md and AGENTS.md.\n"
+                    f"2. Read IMPLEMENTATION_PLAN.md.\n"
+                    f"3. CRITICAL git discipline: after every single file you create or modify, immediately run `git add <file> && git commit -m '<message>'`. ONE file = ONE commit. Never batch multiple files.\n"
+                    f"4. After every 3 commits, run `git push`.\n"
+                    f"5. If you are about to run out of turns, stop implementing, commit and push everything completed so far, then stop.\n"
+                    f"6. After pushing all commits, post a comment on PR #{e('T_NUMBER')} in repo {repo} using mcp__github__create_issue_comment summarizing what was implemented, which files were changed, and the branch name.\n"
+                    f"User Instructions:\n{e('C_BODY')}\n\n"
+                )                
+              else:
+                prompt = GITHUB_RULE + (
+                    f"Repository: {repo}\n"
+                    f"Issue #{e('T_NUMBER')}: {e('T_TITLE')}\n"
+                    f"Issue body:\n{e('T_BODY')}\n\n"
+                    f"User comment:\n{e('C_BODY')}\n\n"
+                    f"Instructions:\n"
+                    f"1. Read CLAUDE.md and AGENTS.md.\n"
+                    f"2. Analyze the issue and create a branch for the fix.\n"
+                    f"3. Write an IMPLEMENTATION_PLAN.md describing your approach.\n"
+                    f"4. Commit and push IMPLEMENTATION_PLAN.md to the branch.\n"
+                    f"5. Open a draft PR using mcp__github__create_pull_request with the plan in the description and '@minmax' in the PR body.\n"
+                    f"6. Do NOT implement anything yet — plan only.\n"
+                    f"7. Post a comment on issue #{e('T_NUMBER')} in repo {repo} using mcp__github__create_issue_comment with a summary and a link to the PR."
+                )
           elif event == "pull_request_review_comment":
               prompt = GITHUB_RULE + (
                   f"Repository: {repo}\n"
-                  f"PR #{e('PR_NUMBER')}: {e('PR_TITLE')}\n"
-                  f"PR description:\n{e('PR_BODY')}\n\n"
-                  f"Review comment on {e('COMMENT_PATH')}:\n{e('COMMENT_BODY')}\n\n"
-                  f"After completing the task, post a comment on PR #{e('PR_NUMBER')} in repo {repo} "
-                  f"using mcp__github__create_issue_comment summarizing what was done and which files were changed."
+                  f"PR #{e('T_NUMBER')}: {e('T_TITLE')}\n"
+                  f"PR description:\n{e('T_BODY')}\n\n"
+                  f"Instructions:\n"
+                  f"1. Read CLAUDE.md and AGENTS.md.\n"
+                  f"2. Read IMPLEMENTATION_PLAN.md.\n"
+                  f"3. Review comment on {e('C_PATH')}:\n{e('C_BODY')}\n\n"
+                  f"4. After completing the task, post a comment on PR #{e('T_NUMBER')} in repo {repo} \n"
+                  f"5. using mcp__github__create_issue_comment summarizing what was done and which files were changed."
               )
           elif event == "pull_request_review":
               prompt = GITHUB_RULE + (
                   f"Repository: {repo}\n"
-                  f"PR #{e('PR_NUMBER')}: {e('PR_TITLE')}\n"
-                  f"PR description:\n{e('PR_BODY')}\n\n"
+                  f"PR #{e('T_NUMBER')}: {e('T_TITLE')}\n"
+                  f"PR description:\n{e('T_BODY')}\n\n"
                   f"PR review:\n{e('REVIEW_BODY')}\n\n"
-                  f"After completing the task, post a comment on PR #{e('PR_NUMBER')} in repo {repo} "
-                  f"using mcp__github__create_issue_comment summarizing what was done and which files were changed."
+                  f"Instructions:\n"
+                  f"1. Read CLAUDE.md and AGENTS.md.\n"
+                  f"2. Read IMPLEMENTATION_PLAN.md.\n"
+                  f"3. Address PR review.\n"
+                  f"4. After completing the task, post a comment on PR #{e('T_NUMBER')} in repo {repo} "
+                  f"5. using mcp__github__create_issue_comment summarizing what was done and which files were changed."
               )
           elif event == "pull_request":
               prompt = GITHUB_RULE + (
                   f"Repository: {repo}\n"
-                  f"PR #{e('PR_NUMBER')}: {e('PR_TITLE')}\n"
-                  f"PR description:\n{e('PR_BODY')}\n\n"
+                  f"PR #{e('T_NUMBER')}: {e('T_TITLE')}\n"
+                  f"PR description:\n{e('T_BODY')}\n\n"
                   f"Instructions:\n"
-                  f"1. Implement the plan described in the PR description.\n"
-                  f"2. CRITICAL git discipline: after every single file you create or modify, immediately run `git add <file> && git commit -m '<message>'`. ONE file = ONE commit. Never batch multiple files.\n"
-                  f"3. After every 3 commits, run `git push`.\n"
-                  f"4. If you are about to run out of turns, stop implementing, commit and push everything completed so far, then stop.\n"
-                  f"5. After pushing all commits, post a comment on PR #{e('PR_NUMBER')} in repo {repo} using mcp__github__create_issue_comment summarizing what was implemented, which files were changed, and the branch name."
+                  f"1. Read CLAUDE.md and AGENTS.md.\n"
+                  f"2. Read IMPLEMENTATION_PLAN.md.\n"
+                  f"3. Implement the plan based on the IMPLEMENTATION_PLAN.md file.\n"
+                  f"4. CRITICAL git discipline: after every single file you create or modify, immediately run `git add <file> && git commit -m '<message>'`. ONE file = ONE commit. Never batch multiple files.\n"
+                  f"5. After every 3 commits, run `git push`.\n"
+                  f"6. If you are about to run out of turns, stop implementing, commit and push everything completed so far, then stop.\n"
+                  f"7. After pushing all commits, post a comment on PR #{e('T_NUMBER')} in repo {repo} using mcp__github__create_issue_comment summarizing what was implemented, which files were changed, and the branch name."
               )
           else:
               prompt = ""
@@ -152,17 +180,10 @@ jobs:
       - name: Post starting comment
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EVENT_NAME: ${{ github.event_name }}
           REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          T_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
         run: |
-          if [ "$EVENT_NAME" = "issue_comment" ]; then
-            NUMBER="$ISSUE_NUMBER"
-          else
-            NUMBER="$PR_NUMBER"
-          fi
-          gh issue comment "$NUMBER" --repo "$REPO" --body "MiniMax is starting to work on this..."
+          gh issue comment "$T_NUMBER" --repo "$REPO" --body "MiniMax is starting to work on this..."
 
       - name: Run MiniMax agent
         env:
@@ -181,3 +202,11 @@ jobs:
           git add -A
           git diff --cached --quiet || git commit -m "chore: commit remaining changes from minmax session"
           git push || true
+
+      - name: Upload Claude Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-logs-${{ github.run_id }}
+          path: ~/.claude/logs/
+          retention-days: 7
