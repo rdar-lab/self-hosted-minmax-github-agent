@@ -97,7 +97,9 @@ jobs:
                   f"Repository: {repo}\n"
                   f"Issue #{e('ISSUE_NUMBER')}: {e('ISSUE_TITLE')}\n"
                   f"Issue body:\n{e('ISSUE_BODY')}\n\n"
-                  f"User comment:\n{e('COMMENT_BODY')}"
+                  f"User comment:\n{e('COMMENT_BODY')}\n\n"
+                  f"After completing the task, post a comment on issue #{e('ISSUE_NUMBER')} in repo {repo} "
+                  f"using mcp__github__create_issue_comment summarizing what was done and linking any PR created."
               )
           elif event == "pull_request_review_comment":
               prompt = (
