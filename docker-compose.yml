@@ -1,0 +1,14 @@
+services:
+  runner:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    # runner-data persists the runner registration (.runner, .credentials files)
+    # and the job work directory (_work) across container restarts.
+    # The runner only needs to register with GitHub once.
+    volumes:
+      - runner-data:/home/runner/actions-runner
+
+volumes:
+  runner-data:

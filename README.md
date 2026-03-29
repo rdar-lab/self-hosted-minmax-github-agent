@@ -11,6 +11,44 @@ So whats wrong with Claude CLI? Nothing, but I want to have a more seamless expe
 
 ## How to deploy
 
+### Option A — Docker (recommended)
+
+The easiest way to run the self-hosted runner is with Docker.
+
+**Prerequisites:** Docker and Docker Compose installed on the host machine.
+
+1. **One-time Claude token setup** — on any machine with Claude CLI installed:
+    ```bash
+    claude auth login
+    claude /install-github-app   # connect the Claude GitHub app to your repo
+    claude setup-token           # prints CLAUDE_CODE_OAUTH_TOKEN
+    ```
+    Save the printed token as a GitHub secret: repository **Settings → Secrets and variables → Actions → New repository secret**, name it `CLAUDE_CODE_OAUTH_TOKEN`.
+
+2. **Configure the runner:**
+    ```bash
+    cp .env.example .env
+    # Edit .env — set GITHUB_URL and RUNNER_TOKEN at minimum
+    ```
+    Get `RUNNER_TOKEN` from your repository: **Settings → Actions → Runners → New self-hosted runner**. Scroll to the Configure section and copy the token value from the `./config.sh --token <VALUE>` command. The token is only needed on the very first startup — after that the registration is persisted in a Docker volume.
+
+3. **Build and start:**
+    ```bash
+    docker compose build
+    docker compose up -d
+    ```
+    The runner appears under repository **Settings → Actions → Runners** once it is online.
+
+4. Copy `.github/workflows/claude.yml` and `CLAUDE.md` from this repository into your target repository, then commit and push.
+
+5. Optional: add `AGENTS.md` with project-specific conventions for the agent.
+
+> **Note on `RUNNER_VERSION`:** The Dockerfile pins a specific runner version via the `RUNNER_VERSION` build arg (default `2.333.0`). If the build fails to download the runner binary, check the [latest release](https://github.com/actions/runner/releases) and override: `docker compose build --build-arg RUNNER_VERSION=X.Y.Z`.
+
+---
+
+### Option B — Bare metal
+
 The core requires the following:
 
 1. You need to deploy and connect a GitHub self-hosted runner to your repository. This is the machine that will run the agent. To do so you will need to go to the project settings in GitHub, choose the option Actions->Runners, press "New..." and follow the instructions to deploy. Now remember, this runner runs on the machine, so I suggest to use a VM / sandboxed system for the runner.
