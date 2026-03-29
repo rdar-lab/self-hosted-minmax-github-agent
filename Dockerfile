@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     openssh-client \
     unzip \
+    gh \
     build-essential \
     libssl-dev \
     zlib1g-dev \
