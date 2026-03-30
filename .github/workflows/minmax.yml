@@ -133,7 +133,7 @@ jobs:
             1. Create a Todo List:
               - Use your GitHub comment to maintain a detailed task list based on the request.
               - Format todos as a checklist (- [ ] for incomplete, - [x] for complete).
-              - Update the comment using mcp__github__update_issue_comment with each task completion.
+              - IMPORTANT: Every time you complete a todo item, you MUST immediately call mcp__github__update_issue_comment to update the comment with the checked box. There is no automatic todo syncing — you must do it manually after every single task.
             
             2. Gather Context:
               - Analyze the pre-fetched data provided above.
@@ -171,13 +171,13 @@ jobs:
                 - Reference specific code with inline formatting or code blocks.
                 - Include relevant file paths and line numbers when applicable.
                 - When identifying issues that could be fixed, include an inline link
-                  The query should be URI-encoded and include enough context for Claude Code to understand and fix the issue (file path, line numbers, branch name, what needs to change).
-                - IMPORTANT: Submit your review feedback by updating the Claude comment using mcp__github__update_issue_comment. This will be displayed as your PR review.
+                  The query should be URI-encoded and include enough context for Agent Code to understand and fix the issue (file path, line numbers, branch name, what needs to change).
+                - IMPORTANT: Submit your review feedback by updating your comment using mcp__github__update_issue_comment. This will be displayed as your review/response.
               
               B. For Straightforward Changes:
                 - Use file system tools to make the change locally.
                 - If you discover related tasks (e.g., updating tests), add them to the todo list.
-                - Mark each subtask as completed as you progress.
+                - After completing each subtask, immediately call mcp__github__update_issue_comment to mark it as done in the comment.
                 - Use git commands via the Bash tool to commit and push your changes:
                     - Stage files: Bash(git add <files>)
                     - Commit with a descriptive message: Bash(git commit -m "<message>")
@@ -189,7 +189,7 @@ jobs:
               - Add new todos for any dependencies or related tasks you identify.
               - Remove unnecessary todos if requirements change.
               - Explain your reasoning for each decision.
-              - Mark each subtask as completed as you progress.
+              - After completing each subtask, immediately call mcp__github__update_issue_comment to mark it as done in the comment.
               - Follow the same pushing strategy as for straightforward changes (see section B above).
               - Or explain why it's too complex: mark todo as completed in checklist with explanation.
             
@@ -201,11 +201,11 @@ jobs:
             
             
             Important Notes:
-              - All communication must happen through GitHub PR comments.
+              - All communication must happen through GitHub comments (issue or PR).
               - On your first response, create a new comment using mcp__github__create_issue_comment and save the returned comment ID. For all subsequent updates, use mcp__github__update_issue_comment with that ID.
               - This includes ALL responses: code reviews, answers to questions, progress updates, and final results.
-              - PR CRITICAL: After reading files and forming your response, you MUST post it by calling mcp__github__update_issue_comment. Do NOT just respond with a normal response, the user will not see it.
-              - You communicate exclusively by editing your single comment - not through any other means.
+              - CRITICAL: After reading files and forming your response, you MUST post it by calling mcp__github__update_issue_comment. Do NOT just respond with a normal response, the user will not see it.
+              - You primarily communicate through a single GitHub comment (create once, then update). For issue flows, you may also open PRs and post a separate summary comment on the issue.
               - Use this spinner HTML when work is in progress: <img src="https://github.com/user-attachments/assets/5ac382c7-e004-429b-8e35-7feb3e8f9c6f" width="14px" height="14px" style="vertical-align: middle; margin-left: 4px;" />
               - Always push to the existing branch when triggered on a PR.
               - Use git commands via the Bash tool for version control (remember that you have access to these git commands):
@@ -339,6 +339,7 @@ jobs:
           gh issue comment "$T_NUMBER" --repo "$REPO" --body "MiniMax is starting to work on this..."
 
       - name: Run MiniMax agent
+        id: run-agent
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -348,6 +349,21 @@ jobs:
             --max-turns 200 \
             --allowedTools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(git:*),Bash(find:*),Bash(gh:*),mcp__github__create_pull_request,mcp__github__list_pull_requests,mcp__github__get_pull_request,mcp__github__update_pull_request,mcp__github__create_issue_comment,mcp__github__update_issue_comment,mcp__github__get_issue_comments,mcp__github__get_pull_request_comments" \
             -p "$PROMPT" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Post completion comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          T_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+          AGENT_STATUS: ${{ steps.run-agent.outcome }}
+        run: |
+          if [ "$AGENT_STATUS" = "success" ]; then
+            BODY="MiniMax finished successfully ✅"
+          else
+            BODY="MiniMax finished with errors ❌ — check the [job run](https://github.com/$REPO/actions/runs/${{ github.run_id }}) for details."
+          fi
+          gh issue comment "$T_NUMBER" --repo "$REPO" --body "$BODY"
 
       - name: Safety net — commit and push any uncommitted changes
         if: always()
