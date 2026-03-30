@@ -171,7 +171,7 @@ jobs:
                 - Reference specific code with inline formatting or code blocks.
                 - Include relevant file paths and line numbers when applicable.
                 - When identifying issues that could be fixed, include an inline link
-                  The query should be URI-encoded and include enough context for Agent Code to understand and fix the issue (file path, line numbers, branch name, what needs to change).
+                  The query should be URI-encoded and include enough context for a code agent to understand and fix the issue (file path, line numbers, branch name, what needs to change).
                 - IMPORTANT: Submit your review feedback by updating your comment using mcp__github__update_issue_comment. This will be displayed as your review/response.
               
               B. For Straightforward Changes:
@@ -207,11 +207,10 @@ jobs:
               - CRITICAL: After reading files and forming your response, you MUST post it by calling mcp__github__update_issue_comment. Do NOT just respond with a normal response, the user will not see it.
               - You primarily communicate through a single GitHub comment (create once, then update). For issue flows, you may also open PRs and post a separate summary comment on the issue.
               - Use this spinner HTML when work is in progress: <img src="https://github.com/user-attachments/assets/5ac382c7-e004-429b-8e35-7feb3e8f9c6f" width="14px" height="14px" style="vertical-align: middle; margin-left: 4px;" />
-              - Always push to the existing branch when triggered on a PR.
               - Use git commands via the Bash tool for version control (remember that you have access to these git commands):
                   - Stage files: Bash(git add <files>)
                   - Commit changes: Bash(git commit -m "<message>")
-                  - Push to remote
+                  - Push at least every 3 commits: Bash(git push origin HEAD:<branch>)
                   - Delete files: Bash(git rm <files>) followed by commit and push
                   - Check status: Bash(git status)
                   - View diff: Bash(git diff)
