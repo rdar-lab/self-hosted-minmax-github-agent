@@ -32,13 +32,39 @@ jobs:
           rm -rf ~/.local/share/opencode
           echo '{"$schema": "https://opencode.ai/config.json", "provider":{"minimax":{"npm": "@ai-sdk/anthropic",  "options": { "baseURL": "https://api.minimax.io/anthropic/v1", "apiKey":"${{ secrets.MINIMAX_API_KEY }}" }, "models": { "MiniMax-M2.7": { "name": "MiniMax-M2.7" } } } } }' > ~/.config/opencode/opencode.json
 
+      - name: Post starting comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          T_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+        run: |
+          gh issue comment "$T_NUMBER" --repo "$REPO" --body "MiniMax is starting to work on this..."
+
       - name: Run OpenCode
+        id: run-agent
         uses: anomalyco/opencode/github@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           model: minimax/MiniMax-M2.7
           use_github_token: true
+
+      - name: Post completion comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          T_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+          AGENT_STATUS: ${{ steps.run-agent.outcome }}
+        run: |
+          if [ "$AGENT_STATUS" = "success" ]; then
+            BODY="MiniMax finished successfully ✅"
+          else
+            BODY="MiniMax finished with errors ❌ — check the [job run](https://github.com/$REPO/actions/runs/${{ github.run_id }}) for details."
+          fi
+          gh issue comment "$T_NUMBER" --repo "$REPO" --body "$BODY"
+
+
       - name: Safety net — commit and push any uncommitted changes
         if: always()
         run: |
