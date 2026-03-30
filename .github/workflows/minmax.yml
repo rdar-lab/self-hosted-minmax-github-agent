@@ -181,7 +181,7 @@ jobs:
                 - Use git commands via the Bash tool to commit and push your changes:
                     - Stage files: Bash(git add <files>)
                     - Commit with a descriptive message: Bash(git commit -m "<message>")
-                    - Push to the remote
+                    - Push at least every 3 commits: Bash(git push origin HEAD:<branch>)
             
             
             C. For Complex Changes:
@@ -267,7 +267,7 @@ jobs:
             f"2. Read IMPLEMENTATION_PLAN.md.\n"
             f"3. IMPORTANT: Do not open another PR or branch, this branch is for you to make the updates in.\n"
             f"4. CRITICAL git discipline: after every single file you create or modify, immediately run `git add <file> && git commit -m '<message>'`. ONE file = ONE commit. Never batch multiple files.\n"
-            f"5. After every 3 commits, run `git push`.\n"
+            f"5. Push at least every 3 commits: `git push origin HEAD:{branch}`.\n"
             f"6. To push, ALWAYS use: `git push origin HEAD:{branch}`\n"
             f"7. If you are about to run out of turns, stop implementing, commit and push everything completed so far, then stop.\n"
             f"8. After pushing all commits, post/update a comment on PR #{e('T_NUMBER')} in repo {repo} using mcp__github__create_issue_comment/mcp__github__update_issue_comment summarizing what was implemented, which files were changed, and the branch name.\n\n"
