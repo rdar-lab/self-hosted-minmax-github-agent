@@ -11,8 +11,12 @@ No GitHub Actions credits or GitHub Copilot credits are consumed. The runner run
 
 ### All Options
 
-Install the OpenCode GitHub Opencode Application on your repository.
-https://github.com/apps/opencode-agent
+   1.
+      Install the OpenCode GitHub Opencode Application on your repository.
+      https://github.com/apps/opencode-agent
+   
+   2. Enable "Allow GitHub Actions to create and approve pull requests" for your github repository. Go to **Settings → Actions →General → Workflow permissions** and check the box. 
+
 
 ### Option A — Docker (recommended)
 
