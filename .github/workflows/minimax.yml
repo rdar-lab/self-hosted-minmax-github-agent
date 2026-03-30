@@ -26,6 +26,11 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Configure git identity
+        run: |
+          git config user.email "minmax-agent@github-actions"
+          git config user.name "MiniMax Agent"
+
       - name: Configure OpenCode with MiniMax provider
         run: |
           mkdir -p ~/.config/opencode
