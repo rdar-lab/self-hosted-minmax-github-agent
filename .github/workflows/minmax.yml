@@ -82,7 +82,7 @@ jobs:
             "mcpServers": {
               "github": {
                 "command": "npx",
-                "args": ["-y", "@modelcontextprotocol/server-github"],
+                "args": ["-y", "@github/github-mcp-server"],
                 "env": {
                   "GITHUB_PERSONAL_ACCESS_TOKEN": os.environ["GH_TOKEN"]
                 }
@@ -202,7 +202,7 @@ jobs:
             
             Important Notes:
               - All communication must happen through GitHub comments (issue or PR).
-              - On your first response, create a new comment using mcp__github__create_issue_comment and save the returned comment ID. For all subsequent updates, use mcp__github__update_issue_comment with that ID.
+              - Before doing ANYTHING else, create a comment using mcp__github__create_issue_comment on this issue/PR and save its ID. This is your working comment — update it using mcp__github__update_issue_comment for all subsequent communications.
               - This includes ALL responses: code reviews, answers to questions, progress updates, and final results.
               - CRITICAL: After reading files and forming your response, you MUST post it by calling mcp__github__update_issue_comment. Do NOT just respond with a normal response, the user will not see it.
               - You primarily communicate through a single GitHub comment (create once, then update). For issue flows, you may also open PRs and post a separate summary comment on the issue.
