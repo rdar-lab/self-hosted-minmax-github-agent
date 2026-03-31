@@ -41,7 +41,7 @@ No GitHub Actions credits or GitHub Copilot credits are consumed. The runner run
 
 4. Copy `.github/workflows/minimax.yml` from this repository into your target repository, then commit and push.
 
-5. Optional: add `CLAUDE.md` with project-specific instructions for the agent.
+5. Optional: add `AGENTS.md` with project-specific instructions for the agent.
 
 ---
 
@@ -53,7 +53,7 @@ No GitHub Actions credits or GitHub Copilot credits are consumed. The runner run
 
 3. Copy `.github/workflows/minimax.yml` into your target repository and commit and push.
 
-4. Optional: Add `CLAUDE.md` with project-specific information for the agent.
+4. Optional: Add `AGENTS.md` with project-specific information for the agent.
 
 ## How it works
 
