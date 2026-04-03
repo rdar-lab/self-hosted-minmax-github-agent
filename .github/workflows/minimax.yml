@@ -73,8 +73,9 @@ jobs:
           git add -A
           if ! git diff --cached --quiet; then
             if [ "${{ github.event_name }}" = "pull_request" ]; then
+              git fetch origin refs/pull/${{ github.event.pull_request.number }}/head:${{ github.head_ref }}
               git commit -m "chore: commit remaining changes from minimax session"
-              git push origin HEAD:${{ github.head_ref }}
+              git push origin ${{ github.head_ref }}
             else
               BRANCH_NAME="minimax/work-${{ github.run_id }}"
               git checkout -b "$BRANCH_NAME"
